@@ -141,7 +141,7 @@ function handleLoadedModel(obj) {
   if (model.material) {
     model.material.visible = true;
   }
-let controls=new OrbitControls(camera,renderer.domElement);
+let controls=new OrbitControls(model,renderer.domElement);
 controls.addEventListener('change',renderer);
 controls.minDistance=10;
 controls.maxDistance=100;
