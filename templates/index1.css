@@ -401,7 +401,7 @@
   top: 10px;
   left: 10px;
   width: 200px;
-  height: 100%;
+  height: 98%;
   background-color: white;
   overflow: auto;
 }
@@ -424,7 +424,7 @@
 
 .child-list {
   display: none;
-  margin-left: 10px;
+  margin-left: 20px;
 }
 .hidden {
 display: none;
