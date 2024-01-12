@@ -2,39 +2,15 @@ import * as THREE from 'three';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 15000);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 15000);
 camera.position.set(0, 0, 5);
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth * 0.45, window.innerHeight * 0.5);
 const rendererContainer = document.querySelector('.frame-child');
 rendererContainer.appendChild(renderer.domElement);
-/*
-const rgbeLoader = new RGBELoader();
 
-rgbeLoader.setDataType(THREE.FloatType);
-
-function loadHDRBackground(filePath) {
-  rgbeLoader.load(filePath, (texture) => {
-    // Create a cube with the HDR texture as the background
-    const cubeGeometry = new THREE.BoxGeometry(100000, 100000, 100000);
-    const cubeMaterial = new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide });
-    const skybox = new THREE.Mesh(cubeGeometry, cubeMaterial);
-    scene.background=scene.add(skybox);
-
-    animate();
-  });
-}
-
-loadHDRBackground('winter_sky_1k.hdr');
-*/
-/*let controls=new OrbitControls(camera,renderer.domElement);
-controls.addEventListener('change',renderer);
-controls.minDistance=10;
-controls.maxDistance=7500;
-*/
 let materialArray=[];
 let texture_ft =new THREE.TextureLoader().load('Sky_01/Skybox01_Front+Z.png');
 let texture_bk =new THREE.TextureLoader().load('Sky_01/Skybox01_Back-Z.png');
@@ -132,6 +108,12 @@ function loadFBXModel(file) {
 }
 
 function handleLoadedModel(obj) {
+
+  if (!obj) {
+    console.error('Error: Loaded FBX model is undefined');
+    return;
+  }
+
   if (model) {
     scene.remove(model);
   }
@@ -141,19 +123,27 @@ function handleLoadedModel(obj) {
   if (model.material) {
     model.material.visible = true;
   }
-let controls=new OrbitControls(model,renderer.domElement);
-controls.addEventListener('change',renderer);
-controls.minDistance=10;
-controls.maxDistance=100;
-controls.movementSpeed=0.5;
 
-  const pos = model.position;
-  console.log(pos);
-  camera.lookAt(pos);
-  camera.position.set( pos.x+10,  pos.y+200, pos.z+200);
 
+
+  let controls=new OrbitControls(camera,renderer.domElement);
+  const box = new THREE.Box3().setFromObject(model);
+  const size = box.getSize(new THREE.Vector3()).length();
+  const center = box.getCenter(new THREE.Vector3());
+  console.log(center)
+  controls.reset();
+
+  model.position.x += (model.position.x - center.x);
+  model.position.y += (model.position.y - center.y);
+  model.position.z += (model.position.z - center.z);
+  controls.maxDistance = size * 10;
+  controls.minDistance = size;
+
+  camera.near = size / 100;
+  camera.far = size * 100;
   camera.updateProjectionMatrix();
-
+  camera.position.copy(center);
+  camera.lookAt(center);
   // Handle animations if applicable (for both OBJ and FBX)
   handleAnimations(model);
 
@@ -267,61 +257,6 @@ function createHierarchy(object, parentElement) {
   });
 }
 
-/*
-function createHierarchy(object, parentElement) {
-  // Check if the model is loaded before creating the hierarchy
-  if (!modelLoaded) {
-    return;
-  }
-
-  const hierarchyNode = document.createElement('li'); // Use 'li' for hierarchy nodes
-  hierarchyNode.className = 'hierarchy-node';
-
-  const nodeNameContainer = document.createElement('div');
-  nodeNameContainer.className = 'node-name-container';
-  hierarchyNode.appendChild(nodeNameContainer);
-
-  const nodeName = document.createElement('div');
-  nodeName.textContent = object.name || 'Object';
-  nodeName.className = 'node-name';
-  nodeNameContainer.appendChild(nodeName);
-
-  let childList;
-
-  if (object.children.length > 0) {
-    const arrowIcon = document.createElement('div');
-    arrowIcon.textContent = '▶';
-    arrowIcon.className = 'arrow-icon';
-    nodeNameContainer.appendChild(arrowIcon);
-
-    childList = document.createElement('ul'); // Use 'ul' for child lists
-    childList.className = 'child-list';
-    hierarchyNode.appendChild(childList);
-
-    arrowIcon.addEventListener('click', () => {
-      childList.style.display = childList.style.display === 'none' ? 'block' : 'none';
-      arrowIcon.textContent = childList.style.display === 'none' ? '▶' : '▼';
-    });
-
-    // Recursive call to create hierarchy for children
-    object.children.forEach((child) => {
-      createHierarchy(child, childList);
-    });
-  }
-
-  if (parentElement) {
-    parentElement.appendChild(hierarchyNode);
-  } else {
-    hierarchyContainer.appendChild(hierarchyNode);
-  }
-  console.log('Hierarchy node created:', hierarchyNode);
-  // Event listener for clicking on the hierarchy node
-  nodeName.addEventListener('click', () => {
-    highlightObject(object);
-  });
-}
-
-*/
 
 function highlightObject(object) {
   const originalMaterial = object.material;
@@ -431,27 +366,20 @@ function handleModelClick(event) {
     console.log('Clicked on:', clickedObject.name || 'Unnamed Object');
   }
 }
-document.addEventListener('DOMContentLoaded', function () {
-  const menuButton = document.getElementById('menu-button');
-  const frameIcon = document.querySelector('.frame-icon');
-  const closeIcon = document.getElementById('close-icon');
 
-  // Slide in frame-icon from the left and hide menu button when clicked
-  menuButton.addEventListener('click', function () {
-    menuButton.style.display = 'none';
-    frameIcon.style.display='block';
-    closeIcon.style.display = 'block';
-  });
-
-  // Close frame-icon and show menu button when the close icon is clicked
-  closeIcon.addEventListener('click', function () {
-    menuButton.style.display = 'block';
-    frameIcon.style.display = 'none';
-    closeIcon.style.display = 'none';
-  });
-});
 dropZone.addEventListener('drop', handleFileDrop);
+//rendererContainer.addEventListener('drop',handleFileDrop);
 renderer.domElement.addEventListener('click', handleModelClick);
+const toggleHierarchyBtn = document.getElementById('toggleHierarchyBtn');
+
+
+toggleHierarchyBtn.addEventListener('click', toggleHierarchy);
+
+function toggleHierarchy() {
+   const isHidden = hierarchyContainer.style.left === '-200px';
+   hierarchyContainer.style.left = isHidden ? '0' : '-200px';
+}
+
 
 animate();
 
