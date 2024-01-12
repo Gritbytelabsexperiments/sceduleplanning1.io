@@ -12,7 +12,7 @@
   </head>
   <body>
     <div class="frame-parent">
-      <div class="buttonbutton-wrapper">
+      <div class="buttonbutton-wrapper" id="button-wrapper">
         <div class="buttonbutton">
           <div class="primitive">
             <img class="icon-left" alt="" />
@@ -39,7 +39,7 @@
             <div class="list-item-title">Projects</div>
             <div class="this-is-the">Recents</div>
           </div>
-          <div class="buttonicon-button">
+          <div class="buttonicon-button" id="button-icon">
             <img
               class="icon-keyboard-arrow-right"
               alt=""
@@ -53,20 +53,25 @@
           src="./public/dividerdivider@2x.png"
         />
       </div>
-      <div class="frame-wrapper">
-        <div class="vr-applications-parent">
-          <div class="list-item-title">VR Applications</div>
-          <div class="this-is-the">3 Tasks due</div>
+      <div class="combined-projects-container" id="combined-projects-container">
+        <span class="delete-button" ></span>
+        <!-- Projects will be dynamically added here -->
+        <div class="frame-wrapper" id="frame-wrapper"> 
         </div>
-      </div>
-      <div class="frame-container">
+    </div>
+        
+      <div class="frame-container" id="framecontainer">
         <div class="list-item-title-parent">
           <div class="list-item-title">Create Projects</div>
           <div class="this-is-the">click on the add button</div>
         </div>
       </div>
+      
     </div>
+   
+
     <!-- Include the JavaScript file -->
     <script src="./index.js"></script>
+    <script src="./templates/projects.js"></script>
   </body>
 </html>
