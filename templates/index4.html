@@ -21,10 +21,12 @@
   </head>
   <body>
     <div class="frame-parent">
-      
+      <button id="toggleHierarchyBtn">></button>
       <div class="frame-child">
         <img class="frame" alt="" src="./public/frame-15@2x.png" />
-      <div id="drop-zone"></div>
+        <div id="drop-zone">
+      </div>
+      
     <div id="hierarchy-container">
   </div>
     </div>
@@ -228,14 +230,32 @@
         <div class="frame-child6"></div>
       </div>
       
-      
+      <div id="mySidebar" class="sidebar">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
+        <a href="../index2.html">Home</a>
+        <a href="#">Plan</a>
+        <a href="#">Clients</a>
+        <a href="#">Contact</a>
+      </div>
+      <div id="main">
+        <button class="openbtn" onclick="openNav()">☰ </button>  
+      </div>
     </div>
-    <div class="menu-container">
-      <img id="menu-button" class="menu-icon" alt="Menu" src="./public/menu.png" />
-      <img class="frame-icon frame-icon-hidden" alt="" src="./public/frame-11@2x.png" />
-      <div id="close-icon">×</div>
-    </div>
+    
   </div>
+  <script>
+    function openNav() {
+  document.getElementById("mySidebar").style.width = "150px";
+  document.getElementById("main").style.display = "none";
+}
+
+function closeNav() {
+  document.getElementById("main").style.display= "block";
+  document.getElementById("mySidebar").style.width = "0";
+  document.getElementById("main").style.marginLeft= "0";
+}
+  </script>
+
     <script type="module" src="main3.js"></script>
     <script type="module" src="section2.js"></script>    
   </body>
