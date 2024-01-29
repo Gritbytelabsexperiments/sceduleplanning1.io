@@ -1,11 +1,10 @@
 // section2.js
 import * as THREE from 'three';
-import { model, mainCameraPosition } from './main3.js';
+import { model, saveMatrix,updateMainHierarchy} from './main3.js';
 
 const scene2 = new THREE.Scene();
-const camera2 = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 15000);
-camera2.position.copy(mainCameraPosition); // Set camera position from Section 1
-
+const camera2 = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 15000);
+let objecttoremove;
 const section2Renderer = new THREE.WebGLRenderer();
 section2Renderer.setSize(window.innerWidth * 0.45, window.innerHeight*0.5);
 const section2RendererContainer = document.querySelector('.frame-item');
@@ -29,6 +28,8 @@ let skyboxGeo=new THREE.BoxGeometry(10000,10000,10000);
 let skybox=new THREE.Mesh(skyboxGeo,materialArray);
 scene2.add(skybox);
 let section2Model;
+const hierarchyContainer = document.getElementById('hierarchy-container1');
+hierarchyContainer.style.display = 'none';
 
 function handleSection2Drop(event) {
   event.preventDefault();
@@ -47,19 +48,16 @@ function handleSection2Drop(event) {
       }
     });
    
+    hierarchyContainer.style.display = 'block';
 
-    if (section2Model) {
-      scene2.remove(section2Model);
-    }
+    createHierarchy(clonedPart, hierarchyContainer);
 
     scene2.add(clonedPart);
     section2Model = clonedPart;
-
-    const boundingBox = new THREE.Box3().setFromObject(clonedPart);
-    const center = boundingBox.getCenter(new THREE.Vector3());
-
-    camera2.position.copy(mainCameraPosition);
-   
+    camera2.matrixWorld.copy(saveMatrix);
+    //camera2.position.copy(cameraPosition);
+    //camera2.rotation.copy(cameraRotation);
+    //console.log(camera2.position);
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
@@ -69,7 +67,80 @@ function handleSection2Drop(event) {
     scene2.add(directionalLight);
 
     section2Renderer.render(scene2, camera2);
+    objecttoremove=selectedPart;
+    removeObject3D(objecttoremove);
+    updateMainHierarchy();
+    
   }
+}
+function createHierarchy(object, parentElement) {
+  // Check if the model is loaded before creating the hierarchy
+  const hierarchyNode = document.createElement('div');
+  hierarchyNode.className = 'hierarchy-node';
+
+  const nodeNameContainer = document.createElement('div');
+  nodeNameContainer.className = 'node-name-container';
+  hierarchyNode.appendChild(nodeNameContainer);
+
+  const arrowIcon = document.createElement('span');
+  arrowIcon.textContent = '▶';
+  arrowIcon.className = 'arrow-icon';
+  nodeNameContainer.appendChild(arrowIcon);
+
+  const nodeName = document.createElement('span');
+  nodeName.textContent = object.name || 'Object';
+  nodeName.className = 'node-name';
+  nodeNameContainer.appendChild(nodeName);
+
+  let childList;
+
+  if (object.children.length > 0) {
+    childList = document.createElement('span');
+    childList.className = 'child-list';
+    hierarchyNode.appendChild(childList);
+
+    arrowIcon.addEventListener('click', () => {
+      childList.style.display = childList.style.display === 'none' ? 'block' : 'none';
+      arrowIcon.textContent = childList.style.display === 'none' ? '▶' : '▼';
+    });
+
+    // Recursive call to create hierarchy for children
+    object.children.forEach((child) => {
+      createHierarchy(child, childList);
+    });
+  } else {
+    // If there are no children, hide the arrow icon
+    arrowIcon.style.display = 'none';
+  }
+
+  if (parentElement) {
+    parentElement.appendChild(hierarchyNode);
+  } else {
+    hierarchyContainer.appendChild(hierarchyNode);
+  }
+  console.log('Hierarchy node created:', hierarchyNode);
+
+}
+function removeObject3D(object) {
+  if (!(object instanceof THREE.Object3D)) return false;
+  // for better memory management and performance
+  if (object.geometry) {
+      object.geometry.dispose();
+  }
+  if (object.material) {
+      if (object.material instanceof Array) {
+          // for better memory management and performance
+          object.material.forEach(material => material.dispose());
+      } else {
+          // for better memory management and performance
+          object.material.dispose();
+      }
+  }
+  if (object.parent) {
+      object.parent.remove(object);
+  }
+  // the parent might be the scene or another Object3D, but it is sure to be removed this way
+  return true;
 }
 function handleSection2Zoom(event) {
   const delta = event.deltaY;
@@ -102,5 +173,15 @@ section2RendererContainer.addEventListener('dragover', (event) => {
 section2RendererContainer.addEventListener('dragleave', () => {
   section2RendererContainer.style.border = 'none';
 });
+
+const toggleHierarchyBtn = document.getElementById('toggleHierarchyBtn1');
+
+
+toggleHierarchyBtn.addEventListener('click', toggleHierarchy);
+
+function toggleHierarchy() {
+   const isHidden = hierarchyContainer.style.left === '-200px';
+   hierarchyContainer.style.left = isHidden ? '10px' : '-200px';
+}
 
 section2RendererContainer.addEventListener('drop', handleSection2Drop);
