@@ -24,6 +24,7 @@ materialArray.push(new THREE.MeshBasicMaterial({map: texture_up}));
 materialArray.push(new THREE.MeshBasicMaterial({map: texture_dn}));
 materialArray.push(new THREE.MeshBasicMaterial({map: texture_rt}));
 materialArray.push(new THREE.MeshBasicMaterial({map: texture_lf}));
+
 for(let i=0;i<6;i++)
   materialArray[i].side=THREE.BackSide;
 let skyboxGeo=new THREE.BoxGeometry(10000,10000,10000);
@@ -61,6 +62,14 @@ function handleFileDrop(event) {
     modelImage.style.display = 'none';
   }
  dropZone.style.display = 'none';
+}
+function handleFileUpload(event) {
+  const file = event.target.files[0]; // Access the uploaded file
+  if(file){
+    loadModel(file);
+    modelImage.style.display= 'none';
+  }
+  dropZone.style.display= 'none';
 }
 
 function loadModel(file) {
@@ -119,12 +128,33 @@ function handleLoadedModel(obj) {
   }
 
   model = obj;
+  
+
+
 
   if (model.material) {
     model.material.visible = true;
   }
 
+ 
+  /*var q = new THREE.Quaternion( 0, 0, 0, 1 );
 
+  var v = new THREE.Euler();  
+  v.setFromQuaternion( q );
+
+  v.y += Math.PI; // y is 180 degrees off
+
+  v.z *= -1; // flip z
+
+  model.rotation.copy( v );
+*/
+  /*const quaternion = new THREE.Quaternion();
+  quaternion.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI / 2 );
+
+  const vector = new THREE.Vector3( 1, 0, 0 );
+  vector.applyQuaternion( quaternion );
+  model.quaternion.conjugate();
+  */
 
   let controls=new OrbitControls(camera,renderer.domElement);
   const box = new THREE.Box3().setFromObject(model);
@@ -146,6 +176,7 @@ function handleLoadedModel(obj) {
   camera.lookAt(center);
   // Handle animations if applicable (for both OBJ and FBX)
   handleAnimations(model);
+  //camera.updateMatrixWorld(true);
 
   // Set the flag to true when the model is loaded
   modelLoaded = true;
@@ -155,7 +186,11 @@ function handleLoadedModel(obj) {
 
   createHierarchy(model, hierarchyContainer);
 
+
   scene.add(model);
+  //const axesHelper = new THREE.AxesHelper( 5 );
+  //scene.add( axesHelper );
+  
 
   // Hide the image after loading the model
   modelImage.style.display = 'none';
@@ -182,7 +217,7 @@ function handleAnimations(obj) {
     animateAnimations();
   }
 }
-
+//THREE.Object3D.DefaultUp.set(0, 0, 1); to rotate the model
 function onMouseClick(event, clickedObject) {
   mouse.x = (event.clientX / renderer.domElement.clientWidth);
   mouse.y = -(event.clientY / renderer.domElement.clientHeight) ;
@@ -367,22 +402,36 @@ function handleModelClick(event) {
   }
 }
 
+const fileInput = document.getElementById('fileInput');
+fileInput.addEventListener('change', handleFileUpload);
+
 dropZone.addEventListener('drop', handleFileDrop);
 //rendererContainer.addEventListener('drop',handleFileDrop);
 renderer.domElement.addEventListener('click', handleModelClick);
+
 const toggleHierarchyBtn = document.getElementById('toggleHierarchyBtn');
-
-
 toggleHierarchyBtn.addEventListener('click', toggleHierarchy);
 
 function toggleHierarchy() {
    const isHidden = hierarchyContainer.style.left === '-200px';
-   hierarchyContainer.style.left = isHidden ? '0' : '-200px';
+   hierarchyContainer.style.left = isHidden ? '10px' : '-200px';
 }
 
-
 animate();
+camera.updateWorldMatrix(true);
 
-export { model };
-export const mainCameraPosition = camera.position;
+var saveMatrix = new THREE.Matrix4();
+
+saveMatrix.copy(camera.matrixWorld);
+
+function updateMainHierarchy() {
+  // Clear the existing hierarchy container
+  hierarchyContainer.innerHTML = '';
+  // Recreate the hierarchy based on the current state of the model
+  createHierarchy(model, hierarchyContainer);
+}
+/*const cameraPosition = camera.position.clone();
+const cameraRotation = camera.rotation.clone();
+*/
+export { model,saveMatrix,updateMainHierarchy };
 
