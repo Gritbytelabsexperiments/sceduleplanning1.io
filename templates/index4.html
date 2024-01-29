@@ -22,16 +22,21 @@
   <body>
     <div class="frame-parent">
       <button id="toggleHierarchyBtn">></button>
+      <button id="toggleHierarchyBtn1">></button>
       <div class="frame-child">
         <img class="frame" alt="" src="./public/frame-15@2x.png" />
         <div id="drop-zone">
+          <label for="file">Upload file here</label>
+         <input id="fileInput" name="file" type="file" />
+        <button class="Uploadfile" id="Uploadfile">Upload</button>
       </div>
-      
     <div id="hierarchy-container">
   </div>
     </div>
     
-      <div class="frame-item"></div>
+      <div class="frame-item">
+        <div id="hierarchy-container1"></div>
+      </div>
       <div class="frame-group">
         <div class="frame-container">
           <div class="task-1-wrapper">
@@ -244,15 +249,36 @@
     
   </div>
   <script>
-    function openNav() {
+const rendererContainer = document.querySelector('.frame-child');
+const planner =document.querySelector(".frame-group");
+const plannerwindow=document.querySelector(".frame-item");
+function openNav() {
   document.getElementById("mySidebar").style.width = "150px";
   document.getElementById("main").style.display = "none";
+  rendererContainer.style.left="150px";
+  rendererContainer.style.width="649px";
+  document.querySelector(".frame").style.width="649px";
+  planner.style.left="150px";
+  planner.style.width="1272px";
+  plannerwindow.style.left="816px";
+  plannerwindow.style.width="608px";
+  document.getElementById("toggleHierarchyBtn").style.left="150px";
+  document.getElementById("toggleHierarchyBtn1").style.left="765px";
 }
 
 function closeNav() {
   document.getElementById("main").style.display= "block";
   document.getElementById("mySidebar").style.width = "0";
   document.getElementById("main").style.marginLeft= "0";
+  rendererContainer.style.left="80px";
+  rendererContainer.style.width="700px";
+  document.querySelector(".frame").style.width="700px";
+  planner.style.left="80px";
+  planner.style.width="1350px";
+  plannerwindow.style.left="800px";
+  plannerwindow.style.width="627px";
+  document.getElementById("toggleHierarchyBtn").style.left="80px";
+  document.getElementById("toggleHierarchyBtn1").style.left="750px";
 }
   </script>
 
