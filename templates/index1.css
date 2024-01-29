@@ -8,32 +8,44 @@
   position: relative;
   top: 10px;
   height: 30px;
-  left: 150px;
+  left: 80px;
   background-color:black;
   width: 50px;
   color: white;
   text-align: center;
+  border-radius: 20px;
 }
 .frame-child {
   top: 50px;
-  left: 150px;
-  width: 649px;
+  left: 80px;
+  width: 700px;
   height: 349px;
   object-fit: cover;
 }
 .frame{
   top: 50px;
-  left: 150px;
-  width: 649px;
+  align-items: center;
+  width: 700px;
   height: 349px;
   object-fit: cover;
 }
+#toggleHierarchyBtn1 {
+  position: relative;
+  top: 10px;
+  height: 30px;
+  left: 750px;
+  background-color:black;
+  width: 50px;
+  color: white;
+  text-align: center;
+  border-radius: 20px;
+}
 .frame-item {
-  top: 50px;
-  left: 816px;
+  top: 51px;
+  left: 800px;
   background-color: #fff;
   box-shadow: 0-4px 4px rgba(0, 0, 0, 0.25) inset;
-  width: 607px;
+  width: 627px;
   height: 349px;
 }
 .task-1-wrapper {
@@ -368,10 +380,10 @@
 }
 .frame-group {
   top: 425px;
-  left: 150px;
+  left: 80px;
   border-radius: 6px;
   background-color: #fff;
-  width: 1272px;
+  width: 1350px;
   height: 290px;
   cursor: pointer;
 }
@@ -418,6 +430,18 @@
   overflow: auto;
   transition: left 0.3s ease;
 }
+#hierarchy-container1 {
+  cursor: pointer;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 200px;
+  height: 98%;
+  background-color: white;
+  overflow: auto;
+  transition: left 0.3s ease;
+}
+
 .hierarchy-node {
   margin-left: 7px;
 }
@@ -456,6 +480,15 @@ display: none;
   font-size: 30px;
   color: #333;
   z-index: 999;
+  text-align: center;
+}
+.Uploadfile{
+  width: 20%;
+  height: 8%;
+  top:250px;
+  align-items: center;
+  position:absolute;
+
 }
 .frame-icon-hidden {
   display: none;
@@ -501,6 +534,7 @@ display: none;
   color: white;
   padding: 10px 15px;
   border: none;
+  border-radius: 5px;
 }
 
 .openbtn:hover {
