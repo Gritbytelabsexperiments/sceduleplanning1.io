@@ -3,7 +3,7 @@ import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 15000);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 1500000);
 camera.position.set(0, 0, 5);
 
 const renderer = new THREE.WebGLRenderer();
@@ -25,11 +25,7 @@ materialArray.push(new THREE.MeshBasicMaterial({map: texture_dn}));
 materialArray.push(new THREE.MeshBasicMaterial({map: texture_rt}));
 materialArray.push(new THREE.MeshBasicMaterial({map: texture_lf}));
 
-for(let i=0;i<6;i++)
-  materialArray[i].side=THREE.BackSide;
-let skyboxGeo=new THREE.BoxGeometry(10000,10000,10000);
-let skybox=new THREE.Mesh(skyboxGeo,materialArray);
-scene.add(skybox);
+
 
 
 const ambientLight = new THREE.AmbientLight(0xffffff, 1);
@@ -159,6 +155,8 @@ function handleLoadedModel(obj) {
   let controls=new OrbitControls(camera,renderer.domElement);
   const box = new THREE.Box3().setFromObject(model);
   const size = box.getSize(new THREE.Vector3()).length();
+  const modelSize = box.getSize(new THREE.Vector3());
+  console.log("size:"+size);
   const center = box.getCenter(new THREE.Vector3());
   console.log(center)
   controls.reset();
@@ -168,6 +166,13 @@ function handleLoadedModel(obj) {
   model.position.z += (model.position.z - center.z);
   controls.maxDistance = size * 10;
   controls.minDistance = size;
+  const skyboxSize = Math.max(modelSize.x, modelSize.y, modelSize.z) * 10;
+  console.log(skyboxSize);
+  for(let i=0;i<6;i++)
+    materialArray[i].side=THREE.BackSide;
+  let skyboxGeo=new THREE.BoxGeometry(skyboxSize,skyboxSize,skyboxSize);
+  let skybox=new THREE.Mesh(skyboxGeo,materialArray);
+  scene.add(skybox);
 
   camera.near = size / 100;
   camera.far = size * 100;
@@ -176,7 +181,7 @@ function handleLoadedModel(obj) {
   camera.lookAt(center);
   // Handle animations if applicable (for both OBJ and FBX)
   handleAnimations(model);
-  //camera.updateMatrixWorld(true);
+  camera.updateMatrixWorld(true);
 
   // Set the flag to true when the model is loaded
   modelLoaded = true;
@@ -185,6 +190,7 @@ function handleLoadedModel(obj) {
   hierarchyContainer.style.display = 'block';
 
   createHierarchy(model, hierarchyContainer);
+  
 
 
   scene.add(model);
@@ -430,8 +436,8 @@ function updateMainHierarchy() {
   // Recreate the hierarchy based on the current state of the model
   createHierarchy(model, hierarchyContainer);
 }
-/*const cameraPosition = camera.position.clone();
+const cameraPosition = camera.position.clone();
 const cameraRotation = camera.rotation.clone();
-*/
-export { model,saveMatrix,updateMainHierarchy };
+//console.log(cameraPosition);
+export { model,cameraPosition,cameraRotation,updateMainHierarchy };
 
