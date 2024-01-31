@@ -1,9 +1,9 @@
 // section2.js
 import * as THREE from 'three';
-import { model, saveMatrix,updateMainHierarchy} from './main3.js';
+import { model, cameraPosition,cameraRotation,updateMainHierarchy} from './main3.js';
 
 const scene2 = new THREE.Scene();
-const camera2 = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 15000);
+const camera2 = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 1500000);
 let objecttoremove;
 const section2Renderer = new THREE.WebGLRenderer();
 section2Renderer.setSize(window.innerWidth * 0.45, window.innerHeight*0.5);
@@ -22,11 +22,8 @@ materialArray.push(new THREE.MeshBasicMaterial({map: texture_up}));
 materialArray.push(new THREE.MeshBasicMaterial({map: texture_dn}));
 materialArray.push(new THREE.MeshBasicMaterial({map: texture_rt}));
 materialArray.push(new THREE.MeshBasicMaterial({map: texture_lf}));
-for(let i=0;i<6;i++)
-  materialArray[i].side=THREE.BackSide;
-let skyboxGeo=new THREE.BoxGeometry(10000,10000,10000);
-let skybox=new THREE.Mesh(skyboxGeo,materialArray);
-scene2.add(skybox);
+
+
 let section2Model;
 const hierarchyContainer = document.getElementById('hierarchy-container1');
 hierarchyContainer.style.display = 'none';
@@ -48,24 +45,44 @@ function handleSection2Drop(event) {
       }
     });
    
+
+    const box = new THREE.Box3().setFromObject(clonedPart);
+    const size = box.getSize(new THREE.Vector3()).length();
+    const modelSize = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const skyboxSize = Math.max(modelSize.x, modelSize.y, modelSize.z) * 10;
+    console.log(skyboxSize);
+    for(let i=0;i<6;i++)
+      materialArray[i].side=THREE.BackSide;
+    let skyboxGeo=new THREE.BoxGeometry(skyboxSize,skyboxSize,skyboxSize);
+    let skybox=new THREE.Mesh(skyboxGeo,materialArray);
+    scene2.add(skybox);
+    clonedPart.position.x += (clonedPart.position.x - center.x);
+    clonedPart.position.y += (clonedPart.position.y - center.y);
+    clonedPart.position.z += (clonedPart.position.z - center.z);
+    camera2.near = size / 100;
+    camera2.far = size * 100;
+    camera2.updateProjectionMatrix();
+    camera2.position.copy(center);
+    camera2.lookAt(center);
+    camera2.updateMatrixWorld(true);
+
     hierarchyContainer.style.display = 'block';
 
     createHierarchy(clonedPart, hierarchyContainer);
 
     scene2.add(clonedPart);
     section2Model = clonedPart;
-    camera2.matrixWorld.copy(saveMatrix);
+    //camera2.matrixWorld.copy(saveMatrix);
     //camera2.position.copy(cameraPosition);
     //camera2.rotation.copy(cameraRotation);
-    //console.log(camera2.position);
+    console.log(camera2.position);
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(0, 0, 1).normalize();
-
     scene2.add(ambientLight);
     scene2.add(directionalLight);
-
     section2Renderer.render(scene2, camera2);
     objecttoremove=selectedPart;
     removeObject3D(objecttoremove);
