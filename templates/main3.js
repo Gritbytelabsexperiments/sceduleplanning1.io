@@ -164,7 +164,7 @@ function handleLoadedModel(obj) {
   model.position.x += (model.position.x - center.x);
   model.position.y += (model.position.y - center.y);
   model.position.z += (model.position.z - center.z);
-  controls.maxDistance = size * 10;
+  controls.maxDistance = size * 3.8;
   controls.minDistance = size;
   const skyboxSize = Math.max(modelSize.x, modelSize.y, modelSize.z) * 10;
   console.log(skyboxSize);
