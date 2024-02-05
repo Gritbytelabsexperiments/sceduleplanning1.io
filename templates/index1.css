@@ -472,7 +472,7 @@ display: none;
   height: 100%;
   position: absolute;
   top: 0;
-  left: 0;
+  left: 30px;
   background: rgba(255, 255, 255, 0.5);
   display: flex;
   align-items: center;
@@ -488,7 +488,6 @@ display: none;
   top:250px;
   align-items: center;
   position:absolute;
-
 }
 .frame-icon-hidden {
   display: none;
@@ -507,7 +506,7 @@ display: none;
 }
 
 .sidebar a {
-  padding: 8px 8px 8px 32px;
+  padding: 8px 8px 8px 20px;
   text-decoration: none;
   font-size: 25px;
   color: #818181;
@@ -518,7 +517,19 @@ display: none;
 .sidebar a:hover {
   color: #f1f1f1;
 }
-
+.sidebar a.active {
+  background-color: #04AA6D;
+  color: white;
+}
+.sidebar a:hover:not(.active) {
+  background-color: #555;
+  color: white;
+}
+div.content {
+  margin-left: 200px;
+  padding: 1px 16px;
+  height: 1000px;
+}
 .sidebar .closebtn {
   position: absolute;
   top: 0;
@@ -550,4 +561,5 @@ display: none;
 @media screen and (max-height: 450px) {
   .sidebar {padding-top: 15px;}
   .sidebar a {font-size: 18px;}
+  div.content {margin-left: 0;}
 }
