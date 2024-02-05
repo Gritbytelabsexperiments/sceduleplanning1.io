@@ -1,6 +1,7 @@
 // section2.js
 import * as THREE from 'three';
 import { model, cameraPosition,cameraRotation,updateMainHierarchy} from './main3.js';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 
 const scene2 = new THREE.Scene();
 const camera2 = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 1500000);
@@ -45,11 +46,17 @@ function handleSection2Drop(event) {
       }
     });
    
-
+    let controls=new OrbitControls(camera2,section2Renderer.domElement);
     const box = new THREE.Box3().setFromObject(clonedPart);
     const size = box.getSize(new THREE.Vector3()).length();
     const modelSize = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
+    controls.reset();
+    clonedPart.position.x += (clonedPart.position.x - center.x);
+    clonedPart.position.y += (clonedPart.position.y - center.y);
+    clonedPart.position.z += (clonedPart.position.z - center.z);
+    controls.maxDistance = size * 3.8;
+    controls.minDistance = size;
     const skyboxSize = Math.max(modelSize.x, modelSize.y, modelSize.z) * 10;
     console.log(skyboxSize);
     for(let i=0;i<6;i++)
@@ -57,9 +64,6 @@ function handleSection2Drop(event) {
     let skyboxGeo=new THREE.BoxGeometry(skyboxSize,skyboxSize,skyboxSize);
     let skybox=new THREE.Mesh(skyboxGeo,materialArray);
     scene2.add(skybox);
-    clonedPart.position.x += (clonedPart.position.x - center.x);
-    clonedPart.position.y += (clonedPart.position.y - center.y);
-    clonedPart.position.z += (clonedPart.position.z - center.z);
     camera2.near = size / 100;
     camera2.far = size * 100;
     camera2.updateProjectionMatrix();
