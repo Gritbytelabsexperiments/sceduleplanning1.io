@@ -2,14 +2,19 @@ import * as THREE from 'three';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 1500000);
-camera.position.set(0, 0, 5);
 
+camera.position.set(0, 0, 5);
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth * 0.45, window.innerHeight * 0.5);
 const rendererContainer = document.querySelector('.frame-child');
 rendererContainer.appendChild(renderer.domElement);
+let controls=new OrbitControls(camera,renderer.domElement);
 
 let materialArray=[];
 let texture_ft =new THREE.TextureLoader().load('Sky_01/Skybox01_Front+Z.png');
@@ -25,9 +30,6 @@ materialArray.push(new THREE.MeshBasicMaterial({map: texture_dn}));
 materialArray.push(new THREE.MeshBasicMaterial({map: texture_rt}));
 materialArray.push(new THREE.MeshBasicMaterial({map: texture_lf}));
 
-
-
-
 const ambientLight = new THREE.AmbientLight(0xffffff, 1);
 scene.add(ambientLight);
 
@@ -41,12 +43,16 @@ hierarchyContainer.style.display = 'none'; // Initially hide the hierarchy
 const dropZone = document.getElementById('drop-zone');
 const modelImage = document.querySelector(' img.frame');
 
-// Hide the image initially
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-
 let modelLoaded = false; // Flag to track whether the model is loaded
 let model;
+
+window.addEventListener('resize',function(){
+  var width = window.innerWidth*0.45;
+  var height = window.innerHeight*0.5;
+  renderer.setSize(width,height) ;
+  camera.aspect = width/height;
+  camera.updateProjectionMatrix();
+});
 
 function handleFileDrop(event) {
   event.preventDefault();
@@ -57,8 +63,8 @@ function handleFileDrop(event) {
     // Hide the image when a file is dropped
     modelImage.style.display = 'none';
   }
- dropZone.style.display = 'none';
 }
+
 function handleFileUpload(event) {
   const file = event.target.files[0]; // Access the uploaded file
   if(file){
@@ -113,61 +119,34 @@ function loadFBXModel(file) {
 }
 
 function handleLoadedModel(obj) {
-
   if (!obj) {
     console.error('Error: Loaded FBX model is undefined');
     return;
   }
-
   if (model) {
     scene.remove(model);
   }
-
   model = obj;
-  
-
-
-
   if (model.material) {
     model.material.visible = true;
   }
-
- 
-  /*var q = new THREE.Quaternion( 0, 0, 0, 1 );
-
-  var v = new THREE.Euler();  
-  v.setFromQuaternion( q );
-
-  v.y += Math.PI; // y is 180 degrees off
-
-  v.z *= -1; // flip z
-
-  model.rotation.copy( v );
-*/
-  /*const quaternion = new THREE.Quaternion();
-  quaternion.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI / 2 );
-
-  const vector = new THREE.Vector3( 1, 0, 0 );
-  vector.applyQuaternion( quaternion );
-  model.quaternion.conjugate();
-  */
-
-  let controls=new OrbitControls(camera,renderer.domElement);
+  controls.reset();
+  controls.enableDamping=true;
+  controls.screenSpacePanning = false;
   const box = new THREE.Box3().setFromObject(model);
   const size = box.getSize(new THREE.Vector3()).length();
   const modelSize = box.getSize(new THREE.Vector3());
-  console.log("size:"+size);
   const center = box.getCenter(new THREE.Vector3());
-  console.log(center)
-  controls.reset();
 
   model.position.x += (model.position.x - center.x);
   model.position.y += (model.position.y - center.y);
   model.position.z += (model.position.z - center.z);
+
   controls.maxDistance = size * 3.8;
   controls.minDistance = size;
+
   const skyboxSize = Math.max(modelSize.x, modelSize.y, modelSize.z) * 10;
-  console.log(skyboxSize);
+  
   for(let i=0;i<6;i++)
     materialArray[i].side=THREE.BackSide;
   let skyboxGeo=new THREE.BoxGeometry(skyboxSize,skyboxSize,skyboxSize);
@@ -182,28 +161,14 @@ function handleLoadedModel(obj) {
   // Handle animations if applicable (for both OBJ and FBX)
   handleAnimations(model);
   camera.updateMatrixWorld(true);
-
   // Set the flag to true when the model is loaded
   modelLoaded = true;
-
   // Show the hierarchy after loading the model
   hierarchyContainer.style.display = 'block';
-
   createHierarchy(model, hierarchyContainer);
-  
-
-
   scene.add(model);
-  //const axesHelper = new THREE.AxesHelper( 5 );
-  //scene.add( axesHelper );
-  
-
   // Hide the image after loading the model
   modelImage.style.display = 'none';
-
-  // Add a class to the image to make it hidden
- // modelImage.classList.add('hidden');
-
   animate();
 }
 
@@ -221,23 +186,6 @@ function handleAnimations(obj) {
     }
 
     animateAnimations();
-  }
-}
-//THREE.Object3D.DefaultUp.set(0, 0, 1); to rotate the model
-function onMouseClick(event, clickedObject) {
-  mouse.x = (event.clientX / renderer.domElement.clientWidth);
-  mouse.y = -(event.clientY / renderer.domElement.clientHeight) ;
-
-  raycaster.setFromCamera(mouse, camera);
-
-  const clickableObjects = [clickedObject];
-  const intersects = raycaster.intersectObjects(clickableObjects, true);
-
-  if (intersects.length > 0) {
-    const clickedObject = intersects[0].object;
-    highlightObject(clickedObject);
-
-    console.log('Clicked on:', clickedObject.name || 'Unnamed Object');
   }
 }
 
@@ -293,11 +241,37 @@ function createHierarchy(object, parentElement) {
   console.log('Hierarchy node created:', hierarchyNode);
 
   // Event listener for clicking on the hierarchy node
-  nodeName.addEventListener('click', () => {
+
+  nodeName.addEventListener('mousedown', (event) => {
+    handleNodeNameMouseDown(event, nodeNameContainer); // Pass the nodeName directly
     highlightObject(object);
   });
+
+  // Add drag event listener to enable drag and drop
+  nodeNameContainer.setAttribute('draggable', true);
+  nodeNameContainer.addEventListener('dragstart', (event) => {
+    event.dataTransfer.setData('text/plain', nodeName.textContent);
+  });
+
 }
 
+function handleNodeNameMouseDown(event, nodeNameContainer) {
+  const allNodeContainers = document.querySelectorAll('.node-name-container');
+  // Reset background color of all node name containers to white
+  allNodeContainers.forEach(container => {
+    container.style.backgroundColor = 'white';
+  });
+  // Set background color of the clicked node name container to blue
+  nodeNameContainer.style.backgroundColor = 'lightgray';
+  const nodeName = event.target.textContent;
+  navigator.clipboard.writeText(nodeName)
+    .then(() => {
+      console.log('Text copied to clipboard:', nodeName);
+    })
+    .catch(err => {
+      console.error('Failed to copy text to clipboard:', err);
+    });
+}
 
 function highlightObject(object) {
   const originalMaterial = object.material;
@@ -307,13 +281,14 @@ function highlightObject(object) {
   // Reset the material after a brief delay (e.g., 1 second)
   setTimeout(() => {
     object.material = originalMaterial;
-  }, 1000);
+  }, 500);
 }
 
 function animate() {
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
 }
+
 
 function handleZoom(event) {
   const delta = event.deltaY;
@@ -370,15 +345,14 @@ function handleF(event) {
     camera.updateProjectionMatrix();
   }
 }
+
 window.addEventListener('keydown',handleright);
 window.addEventListener('keydown',handleleft);
 window.addEventListener('keydown', handledown);
 window.addEventListener('keydown', handleup);
 window.addEventListener('keydown', handleF);
-//window.addEventListener('keydown', handlezoom);
 renderer.domElement.addEventListener('wheel', handleZoom);
 
-// Event listeners for drag and drop
 dropZone.addEventListener('dragover', (event) => {
   event.preventDefault();
   dropZone.style.display = 'flex';
@@ -388,32 +362,30 @@ dropZone.addEventListener('dragleave', () => {
   dropZone.style.display = 'none';
 });
 
-function handleModelClick(event) {
+const handleModelClick = (event) => {
   // Calculate mouse coordinates in normalized device space (-1 to +1)
   mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
   mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
-
+  console.log("x", mouse.x);
   // Raycast from the camera to the scene
   raycaster.setFromCamera(mouse, camera);
-
   // Find intersected objects
-  const intersects = raycaster.intersectObjects([model], true);
+  const intersects = raycaster.intersectObject(model, true);
+  console.log("intersect",intersects);
 
   if (intersects.length > 0) {
     // Handle the intersected object(s) as needed
     const clickedObject = intersects[0].object;
     highlightObject(clickedObject);
-
     console.log('Clicked on:', clickedObject.name || 'Unnamed Object');
   }
 }
 
+renderer.domElement.addEventListener('click', handleModelClick);
+
 const fileInput = document.getElementById('fileInput');
 fileInput.addEventListener('change', handleFileUpload);
-
 dropZone.addEventListener('drop', handleFileDrop);
-//rendererContainer.addEventListener('drop',handleFileDrop);
-renderer.domElement.addEventListener('click', handleModelClick);
 
 const toggleHierarchyBtn = document.getElementById('toggleHierarchyBtn');
 toggleHierarchyBtn.addEventListener('click', toggleHierarchy);
@@ -431,13 +403,11 @@ var saveMatrix = new THREE.Matrix4();
 saveMatrix.copy(camera.matrixWorld);
 
 function updateMainHierarchy() {
-  // Clear the existing hierarchy container
   hierarchyContainer.innerHTML = '';
-  // Recreate the hierarchy based on the current state of the model
   createHierarchy(model, hierarchyContainer);
 }
+
 const cameraPosition = camera.position.clone();
 const cameraRotation = camera.rotation.clone();
 //console.log(cameraPosition);
 export { model,cameraPosition,cameraRotation,updateMainHierarchy };
-
