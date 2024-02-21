@@ -23,11 +23,39 @@ materialArray.push(new THREE.MeshBasicMaterial({map: texture_up}));
 materialArray.push(new THREE.MeshBasicMaterial({map: texture_dn}));
 materialArray.push(new THREE.MeshBasicMaterial({map: texture_rt}));
 materialArray.push(new THREE.MeshBasicMaterial({map: texture_lf}));
+let controls=new OrbitControls(camera2,section2Renderer.domElement);
 
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+directionalLight.position.set(0, 0, 1).normalize();
+scene2.add(ambientLight);
+scene2.add(directionalLight);
+
+function createskybox(){
+const box1 = new THREE.Box3().setFromObject(model);
+const size1 = box1.getSize(new THREE.Vector3()).length();
+const modelSize1 = box1.getSize(new THREE.Vector3());
+
+const skyboxSize = Math.max(modelSize1.x, modelSize1.y, modelSize1.z) * 10;
+console.log(skyboxSize);
+for(let i=0;i<6;i++)
+  materialArray[i].side=THREE.BackSide;
+let skyboxGeo=new THREE.BoxGeometry(skyboxSize,skyboxSize,skyboxSize);
+let skybox=new THREE.Mesh(skyboxGeo,materialArray);
+scene2.add(skybox);
+}
 
 let section2Model;
 const hierarchyContainer = document.getElementById('hierarchy-container1');
 hierarchyContainer.style.display = 'none';
+
+window.addEventListener('resize',function(){
+  var width = window.innerWidth*0.45;
+  var height = window.innerHeight*0.5;
+  section2Renderer.setSize(width,height) ;
+  camera2.aspect = width/height;
+  camera2.updateProjectionMatrix();
+});
 
 function handleSection2Drop(event) {
   event.preventDefault();
@@ -45,25 +73,21 @@ function handleSection2Drop(event) {
         child.material.visible = true;
       }
     });
-   
-    let controls=new OrbitControls(camera2,section2Renderer.domElement);
+
+    controls.reset();
+    controls.enableDamping=true;
+    controls.screenSpacePanning = false;
     const box = new THREE.Box3().setFromObject(clonedPart);
     const size = box.getSize(new THREE.Vector3()).length();
+    console.log("size1", size);
     const modelSize = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
-    controls.reset();
     clonedPart.position.x += (clonedPart.position.x - center.x);
     clonedPart.position.y += (clonedPart.position.y - center.y);
     clonedPart.position.z += (clonedPart.position.z - center.z);
-    controls.maxDistance = size * 3.8;
+    controls.maxDistance = size * 4.5;
     controls.minDistance = size;
-    const skyboxSize = Math.max(modelSize.x, modelSize.y, modelSize.z) * 10;
-    console.log(skyboxSize);
-    for(let i=0;i<6;i++)
-      materialArray[i].side=THREE.BackSide;
-    let skyboxGeo=new THREE.BoxGeometry(skyboxSize,skyboxSize,skyboxSize);
-    let skybox=new THREE.Mesh(skyboxGeo,materialArray);
-    scene2.add(skybox);
+    
     camera2.near = size / 100;
     camera2.far = size * 100;
     camera2.updateProjectionMatrix();
@@ -77,21 +101,13 @@ function handleSection2Drop(event) {
 
     scene2.add(clonedPart);
     section2Model = clonedPart;
-    //camera2.matrixWorld.copy(saveMatrix);
-    //camera2.position.copy(cameraPosition);
-    //camera2.rotation.copy(cameraRotation);
     console.log(camera2.position);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(0, 0, 1).normalize();
-    scene2.add(ambientLight);
-    scene2.add(directionalLight);
-    section2Renderer.render(scene2, camera2);
+    //section2Renderer.render(scene2, camera2);
     objecttoremove=selectedPart;
     removeObject3D(objecttoremove);
     updateMainHierarchy();
-    
+    animate();
   }
 }
 function createHierarchy(object, parentElement) {
@@ -204,5 +220,15 @@ function toggleHierarchy() {
    const isHidden = hierarchyContainer.style.left === '-200px';
    hierarchyContainer.style.left = isHidden ? '10px' : '-200px';
 }
+function animate() {
+  requestAnimationFrame(animate);
+
+  // Update controls
+  controls.update();
+
+  // Render the scene
+  section2Renderer.render(scene2, camera2);
+}
 
 section2RendererContainer.addEventListener('drop', handleSection2Drop);
+section2RendererContainer.addEventListener('drop', createskybox);
