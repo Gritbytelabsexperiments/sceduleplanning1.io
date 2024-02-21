@@ -443,7 +443,7 @@
 }
 
 .hierarchy-node {
-  margin-left: 7px;
+  margin-left:0px;
 }
 
 .node-name {
@@ -458,10 +458,13 @@
   text-align: left;
   color: #333;
 }
-
+.node-name-container{
+  background-color: "white";
+  margin-bottom: 4px;
+}
 .child-list {
   display: none;
-  margin-left: 20px;
+  margin-left: 10px;
 }
 .hidden {
 display: none;
