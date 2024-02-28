@@ -6,43 +6,43 @@
 }
 #toggleHierarchyBtn{
   position: relative;
-  top: 10px;
+  top: 2%;
   height: 30px;
-  left: 80px;
-  background-color:black;
-  width: 50px;
-  color: white;
+  left: 5%;
+  background-color: #4682A9;
+  width: 3%;
+  color: black;
   text-align: center;
-  border-radius: 20px;
+  border-radius: 4px;
 }
 .frame-child {
-  top: 50px;
-  left: 80px;
-  width: 700px;
-  height: 349px;
+  top: 7%;
+  left: 5%;
+  width: 48%;
+  height: 48.5%;
   object-fit: cover;
 }
 .frame{
-  top: 50px;
+  top:7%;
   align-items: center;
-  width: 700px;
-  height: 349px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
 #toggleHierarchyBtn1 {
   position: relative;
-  top: 10px;
+  top: 2%;
   height: 30px;
-  left: 750px;
-  background-color:black;
-  width: 50px;
-  color: white;
+  left: 51%;
+  background-color: #4682A9;
+  width: 3%;
+  color: black;
   text-align: center;
-  border-radius: 20px;
+  border-radius: 4px;
 }
 .frame-item {
-  top: 51px;
-  left: 800px;
+  top: 7%;
+  left: 54%;
   background-color: #fff;
   box-shadow: 0-4px 4px rgba(0, 0, 0, 0.25) inset;
   width: 627px;
@@ -351,7 +351,7 @@
   position: absolute;
   border-radius: 2px;
   width: 3px;
-  height: 78px;
+  height: 15%;
   overflow: hidden;
 }
 .frame-child4 {
@@ -379,17 +379,17 @@
   box-shadow: 0-4px 4px rgba(0, 0, 0, 0.25) inset;
 }
 .frame-group {
-  top: 425px;
-  left: 80px;
+  top: 60%;
+  left: 5%;
   border-radius: 6px;
   background-color: #fff;
-  width: 1350px;
+  width: 92%;
   height: 290px;
   cursor: pointer;
 }
 .frame-icon,
 .frame-parent {
-  border-radius: 26px;
+  border-radius: 15px;
   overflow: hidden;
 }
 .frame-icon {
@@ -403,7 +403,7 @@
 }
 .frame-parent {
   position: relative;
-  background-color: #e7e7e7;
+  background-color: #F5F5F5;
   width: 100%;
   height: 725px;
   text-align: left;
@@ -422,22 +422,24 @@
 #hierarchy-container {
   cursor: pointer;
   position: absolute;
-  top: 10px;
-  left: 10px;
-  width: 200px;
-  height: 98%;
-  background-color: white;
+  top: 2%;
+  left: 1%;
+  width: 30%;
+  height: 95%;
+  background-color: #F5F5F5;
+  border-radius: 4px;
   overflow: auto;
   transition: left 0.3s ease;
 }
 #hierarchy-container1 {
   cursor: pointer;
   position: absolute;
-  top: 10px;
-  left: 10px;
-  width: 200px;
-  height: 98%;
-  background-color: white;
+  top: 2%;
+  left: 1%;
+  width: 31%;
+  height: 95%;
+  background-color: #F5F5F5;
+  border-radius: 4px;
   overflow: auto;
   transition: left 0.3s ease;
 }
@@ -488,7 +490,7 @@ display: none;
 .Uploadfile{
   width: 20%;
   height: 8%;
-  top:250px;
+  top:75%;
   align-items: center;
   position:absolute;
 }
@@ -502,7 +504,7 @@ display: none;
   z-index: 1;
   top: 0;
   left: 0;
-  background-color: #111;
+  background-color: #4682A9;
   overflow-x: hidden;
   transition: 0.5s;
   padding-top: 60px;
@@ -511,8 +513,8 @@ display: none;
 .sidebar a {
   padding: 8px 8px 8px 20px;
   text-decoration: none;
-  font-size: 25px;
-  color: #818181;
+  font-size: 18px;
+  color: #3F2305;
   display: block;
   transition: 0.3s;
 }
@@ -522,11 +524,11 @@ display: none;
 }
 .sidebar a.active {
   background-color: #04AA6D;
-  color: white;
+  color: black;
 }
 .sidebar a:hover:not(.active) {
   background-color: #555;
-  color: white;
+  color: black;
 }
 div.content {
   margin-left: 200px;
@@ -535,18 +537,19 @@ div.content {
 }
 .sidebar .closebtn {
   position: absolute;
-  top: 0;
-  right: 25px;
-  font-size: 36px;
+  height: 3%;
+  top: 5px;
+  right: 20px;
+  font-size: 30px;
   margin-left: 50px;
 }
 
 .openbtn {
   font-size: 20px;
   cursor: pointer;
-  background-color: #111;
-  color: white;
-  padding: 10px 15px;
+  background-color:#4682A9;
+  color: black;
+  padding: 0.7% 1%;
   border: none;
   border-radius: 5px;
 }
@@ -557,7 +560,7 @@ div.content {
 
 #main {
   transition: margin-left .5s;
-  padding: 16px;
+  padding: 0.6%;
 }
 
 /* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
