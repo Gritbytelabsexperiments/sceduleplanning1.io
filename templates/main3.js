@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import { DragControls } from 'three/addons/controls/DragControls.js';
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
@@ -45,6 +46,9 @@ const modelImage = document.querySelector(' img.frame');
 
 let modelLoaded = false; // Flag to track whether the model is loaded
 let model;
+let childList;
+var intersects=[];
+
 
 window.addEventListener('resize',function(){
   var width = window.innerWidth*0.45;
@@ -118,6 +122,16 @@ function loadFBXModel(file) {
   );
 }
 
+class Node {
+  constructor(name, position) {
+      this.name = name;
+      this.position = position;
+      this.next = null;
+  }
+}
+
+let linkedListHead ;
+
 function handleLoadedModel(obj) {
   if (!obj) {
     console.error('Error: Loaded FBX model is undefined');
@@ -153,7 +167,7 @@ function handleLoadedModel(obj) {
   let skybox=new THREE.Mesh(skyboxGeo,materialArray);
   scene.add(skybox);
 
-  camera.near = size / 100;
+  camera.near = size /10;
   camera.far = size * 100;
   camera.updateProjectionMatrix();
   camera.position.copy(center);
@@ -167,10 +181,62 @@ function handleLoadedModel(obj) {
   hierarchyContainer.style.display = 'block';
   createHierarchy(model, hierarchyContainer);
   scene.add(model);
+  linkedListHead = createLinkedListFromModel(model);
   // Hide the image after loading the model
   modelImage.style.display = 'none';
   animate();
+  let currentNode = linkedListHead;
+while (currentNode !== null) {
+    if (currentNode.name && currentNode.position) {
+        console.log('Name:', currentNode.name);
+        console.log('Position:', currentNode.position);
+    } else {
+        console.log('Invalid node:', currentNode);
+    }
+    currentNode = currentNode.next;
 }
+}
+
+function createLinkedListFromModel(model) {
+  // Head of the linked list
+  let head = null;
+  // Iterate through the children of the model
+  model.traverse(child => {
+      if (child instanceof THREE.Mesh) {
+          // Create a new node for each child
+          let node = new Node(child.name, child.position.clone());
+          // Insert the node into the linked list
+          if (head === null) {
+              head = node;
+          } else {
+              let current = head;
+              while (current.next !== null) {
+                  current = current.next;
+              }
+              current.next = node;
+          }
+      }
+  });
+
+  return head;
+}
+
+function getPositionByName(linkedListHead, targetName) {
+  let currentNode = linkedListHead;
+
+  while (currentNode !== null) {
+      if (currentNode.name === targetName) {
+          // Found the node with the target name, return its position
+          return currentNode.position;
+      }
+
+      currentNode = currentNode.next;
+  }
+
+  // If the target name is not found, return null or handle as needed
+  return null;
+}
+
 
 function handleAnimations(obj) {
   // Check if the model has animations
@@ -212,7 +278,7 @@ function createHierarchy(object, parentElement) {
   nodeName.className = 'node-name';
   nodeNameContainer.appendChild(nodeName);
 
-  let childList;
+  
 
   if (object.children.length > 0) {
     childList = document.createElement('span');
@@ -238,12 +304,9 @@ function createHierarchy(object, parentElement) {
   } else {
     hierarchyContainer.appendChild(hierarchyNode);
   }
-  console.log('Hierarchy node created:', hierarchyNode);
-
-  // Event listener for clicking on the hierarchy node
 
   nodeName.addEventListener('mousedown', (event) => {
-    handleNodeNameMouseDown(event, nodeNameContainer); // Pass the nodeName directly
+    handleNodeNameMouseDown(event, nodeNameContainer); 
     highlightObject(object);
   });
 
@@ -252,6 +315,13 @@ function createHierarchy(object, parentElement) {
   nodeNameContainer.addEventListener('dragstart', (event) => {
     event.dataTransfer.setData('text/plain', nodeName.textContent);
   });
+  
+    renderer.domElement.addEventListener('click', () => {
+      if(intersects.length>0){
+      arrowIcon.textContent = childList.style.display === 'none' ? '▶' : '▼';
+    }
+    });
+  
 
 }
 
@@ -259,11 +329,11 @@ function handleNodeNameMouseDown(event, nodeNameContainer) {
   const allNodeContainers = document.querySelectorAll('.node-name-container');
   // Reset background color of all node name containers to white
   allNodeContainers.forEach(container => {
-    container.style.backgroundColor = 'white';
+    container.style.backgroundColor = '#F5F5F5';
   });
   // Set background color of the clicked node name container to blue
   nodeNameContainer.style.backgroundColor = 'lightgray';
-  const nodeName = event.target.textContent;
+  const nodeName = nodeNameContainer.textContent;
   navigator.clipboard.writeText(nodeName)
     .then(() => {
       console.log('Text copied to clipboard:', nodeName);
@@ -277,8 +347,6 @@ function highlightObject(object) {
   const originalMaterial = object.material;
   const highlightMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
   object.material = highlightMaterial;
-
-  // Reset the material after a brief delay (e.g., 1 second)
   setTimeout(() => {
     object.material = originalMaterial;
   }, 500);
@@ -362,26 +430,120 @@ dropZone.addEventListener('dragleave', () => {
   dropZone.style.display = 'none';
 });
 
-const handleModelClick = (event) => {
-  // Calculate mouse coordinates in normalized device space (-1 to +1)
-  mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
-  mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
-  console.log("x", mouse.x);
-  // Raycast from the camera to the scene
-  raycaster.setFromCamera(mouse, camera);
-  // Find intersected objects
-  const intersects = raycaster.intersectObject(model, true);
-  console.log("intersect",intersects);
+let clickedObject;
 
+const handleModelClick = (event) => {
+  event.preventDefault();
+  mouse.x = (event.offsetX  / event.target.clientWidth ) * 2 - 1;
+  mouse.y = -(event.offsetY /  event.target.clientHeight ) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  intersects = raycaster.intersectObject(model, true);
+  console.log("intersect",intersects);
   if (intersects.length > 0) {
-    // Handle the intersected object(s) as needed
-    const clickedObject = intersects[0].object;
-    highlightObject(clickedObject);
-    console.log('Clicked on:', clickedObject.name || 'Unnamed Object');
+    console.log("Intesect object:",intersects[0].object);
+    if (intersects[0].object) {
+      console.log(intersects[0].object.name);
+      clickedObject = intersects[0].object;
+      highlightObject(clickedObject);
+      hierarchyhighlight(event,clickedObject);
+    }
   }
 }
 
-renderer.domElement.addEventListener('click', handleModelClick);
+function hierarchyhighlight(event,object){
+  const nodeName = object.name;
+      childList.style.display = 'block' ; 
+    // Find the corresponding node name container in the hierarchy
+    const nodeContainers = document.querySelectorAll('.node-name');
+    nodeContainers.forEach(nodeContainer => {
+      if (nodeContainer.textContent === nodeName) {
+        // Get the parent node of the node name container (the hierarchy node)
+        const hierarchyNode = nodeContainer.closest('.hierarchy-node');
+        if (hierarchyNode) {
+          // Highlight the node name in the hierarchy
+           const nodeNameContainer = hierarchyNode.querySelector('.node-name-container');
+          handleNodeNameMouseDown(event, nodeNameContainer);  
+        }
+      }
+    });
+}
+
+function cursorstyle(event){
+  mouse.x = (event.offsetX  / event.target.clientWidth ) * 2 - 1;
+  mouse.y = -(event.offsetY /  event.target.clientHeight ) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  intersects = raycaster.intersectObject(model, true);
+  if (intersects.length > 0) {
+    if (intersects[0].object){
+      renderer.domElement.style.cursor = " pointer ";
+    }
+  }
+  else {
+    renderer.domElement.style.cursor = " auto ";
+  }
+ 
+}
+
+let selectedObj;
+let isDragging = false;
+
+function onMouseDown(event) {
+  event.preventDefault();
+  if (!isDragging) {
+      handleMouseDown(event);
+  }
+  
+}
+
+function handleMouseDown(event) {
+  mouse.x = (event.offsetX / event.target.clientWidth ) * 2 - 1;
+  mouse.y = - (event.offsetY / event.target.clientHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  intersects = raycaster.intersectObject(model, true);
+  if (intersects.length > 0) {
+      selectedObj = intersects[0].object;
+      //highlightObject(selectedObj);
+      isDragging = true;
+      hierarchyhighlight(event,selectedObj);
+      renderer.domElement.addEventListener('mousemove', onMouseMove, false);
+      controls.enableRotate = false;
+  }
+}
+
+const selectedObjChangeEvent = new Event('selectedObjChange');
+function onMouseMove(event) {
+  event.preventDefault();
+  if (selectedObj) {
+      // Calculate mouse position in normalized device coordinates
+    mouse.x = (event.offsetX  / event.target.clientWidth ) * 2 - 1;
+    mouse.y = -(event.offsetY /  event.target.clientHeight ) * 2 + 1;
+    controls.enable = false;
+    var vector = new THREE.Vector3(mouse.x, mouse.y, 0.5).unproject(camera);
+    var dir = vector.sub(camera.position).normalize();
+    var distance = -camera.position.z / dir.z;
+    var pos = camera.position.clone().add(dir.multiplyScalar(distance));
+    selectedObj.position.copy(pos);
+    const nodeName = selectedObj;
+    nodeName.textContent =selectedObj.name ;
+    setSelectedObj(selectedObj);
+    document.dispatchEvent(selectedObjChangeEvent);
+  }
+}
+
+function onMouseUp() {
+  isDragging = false;
+  let targetName=selectedObj.name;
+  let position = getPositionByName(linkedListHead, targetName);
+  selectedObj.position.copy(position);
+  selectedObj=null;
+  renderer.domElement.removeEventListener('mousemove', onMouseMove, false);
+  controls.enableRotate = true;
+}
+
+renderer.domElement.addEventListener('mousedown', onMouseDown, false);
+renderer.domElement.addEventListener('mouseup', onMouseUp, false);
+renderer.domElement.addEventListener('click', handleModelClick,false);
+renderer.domElement.addEventListener('pointermove', cursorstyle ,false);
 
 const fileInput = document.getElementById('fileInput');
 fileInput.addEventListener('change', handleFileUpload);
@@ -407,7 +569,12 @@ function updateMainHierarchy() {
   createHierarchy(model, hierarchyContainer);
 }
 
-const cameraPosition = camera.position.clone();
-const cameraRotation = camera.rotation.clone();
-//console.log(cameraPosition);
-export { model,cameraPosition,cameraRotation,updateMainHierarchy };
+function setSelectedObj(obj) {
+  selectedObj = obj;
+}
+
+export function getSelectedObj() {
+  return selectedObj;
+}
+
+export { model,updateMainHierarchy,linkedListHead,getPositionByName};
