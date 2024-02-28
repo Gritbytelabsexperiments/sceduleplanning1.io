@@ -1,11 +1,12 @@
 // section2.js
 import * as THREE from 'three';
-import { model, cameraPosition,cameraRotation,updateMainHierarchy} from './main3.js';
+import { model,updateMainHierarchy,getSelectedObj,linkedListHead,getPositionByName } from './main3.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 
 const scene2 = new THREE.Scene();
 const camera2 = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 1500000);
 let objecttoremove;
+let section2Model;
 const section2Renderer = new THREE.WebGLRenderer();
 section2Renderer.setSize(window.innerWidth * 0.45, window.innerHeight*0.5);
 const section2RendererContainer = document.querySelector('.frame-item');
@@ -33,7 +34,7 @@ scene2.add(directionalLight);
 
 function createskybox(){
 const box1 = new THREE.Box3().setFromObject(model);
-const size1 = box1.getSize(new THREE.Vector3()).length();
+//const size1 = box1.getSize(new THREE.Vector3()).length();
 const modelSize1 = box1.getSize(new THREE.Vector3());
 
 const skyboxSize = Math.max(modelSize1.x, modelSize1.y, modelSize1.z) * 10;
@@ -45,7 +46,6 @@ let skybox=new THREE.Mesh(skyboxGeo,materialArray);
 scene2.add(skybox);
 }
 
-let section2Model;
 const hierarchyContainer = document.getElementById('hierarchy-container1');
 hierarchyContainer.style.display = 'none';
 
@@ -73,36 +73,30 @@ function handleSection2Drop(event) {
         child.material.visible = true;
       }
     });
-
+    createskybox();
     controls.reset();
     controls.enableDamping=true;
     controls.screenSpacePanning = false;
     const box = new THREE.Box3().setFromObject(clonedPart);
-    const size = box.getSize(new THREE.Vector3()).length();
-    console.log("size1", size);
-    const modelSize = box.getSize(new THREE.Vector3());
+    const box2 = new THREE.Box3().setFromObject(model);
+    const size1 = box2.getSize(new THREE.Vector3()).length();
     const center = box.getCenter(new THREE.Vector3());
-    clonedPart.position.x += (clonedPart.position.x - center.x);
-    clonedPart.position.y += (clonedPart.position.y - center.y);
-    clonedPart.position.z += (clonedPart.position.z - center.z);
-    controls.maxDistance = size * 4.5;
-    controls.minDistance = size;
-    
-    camera2.near = size / 100;
-    camera2.far = size * 100;
+    let targetName=clonedPart.name;
+    let position = getPositionByName(linkedListHead, targetName);
+    clonedPart.position.copy(position);
+    controls.maxDistance = size1 * 4.3;
+    controls.minDistance = size1;
+    camera2.near = size1 / 100;
+    camera2.far = size1 * 100;
     camera2.updateProjectionMatrix();
     camera2.position.copy(center);
     camera2.lookAt(center);
     camera2.updateMatrixWorld(true);
-
     hierarchyContainer.style.display = 'block';
-
     createHierarchy(clonedPart, hierarchyContainer);
-
     scene2.add(clonedPart);
     section2Model = clonedPart;
     console.log(camera2.position);
-
     //section2Renderer.render(scene2, camera2);
     objecttoremove=selectedPart;
     removeObject3D(objecttoremove);
@@ -110,6 +104,60 @@ function handleSection2Drop(event) {
     animate();
   }
 }
+
+//let isActionPerformed = false;
+let selectedObjectArray = [];
+
+function handleSection2Drop1(event){
+  event.preventDefault();
+  let selectedObj;
+  const selectedObjChangeListener = () => {
+    selectedObj = getSelectedObj();
+    section2RendererContainer.style.border = 'none';
+    const selectedPart = selectedObj;
+    if (selectedPart && !selectedObjectArray.includes(selectedPart)) {
+    selectedObjectArray.push(selectedPart);
+    document.removeEventListener('selectedObjChange', selectedObjChangeListener);
+        const clonedPart = selectedPart.clone(true);
+        clonedPart.traverse((child) => {
+            if (child.isMesh) {
+                child.material = child.material.clone();
+                child.material.visible = true;
+            }
+        });
+        createskybox();
+        controls.reset();
+        controls.enableDamping = true;
+        controls.screenSpacePanning = false;
+        //const box = new THREE.Box3().setFromObject(clonedPart);
+        const box2 = new THREE.Box3().setFromObject(model);
+        //const size = box.getSize(new THREE.Vector3()).length();
+        const size1 = box2.getSize(new THREE.Vector3()).length();
+        const center = box2.getCenter(new THREE.Vector3());
+        let targetName=selectedObj.name;
+        let position = getPositionByName(linkedListHead, targetName);
+        clonedPart.position.copy(position);
+        controls.maxDistance = size1 * 4.3;
+        controls.minDistance = size1;
+        camera2.near = size1 / 100;
+        camera2.far = size1 * 100;
+        camera2.updateProjectionMatrix();
+        camera2.position.copy(center);
+        camera2.lookAt(center);
+        camera2.updateMatrixWorld(true);
+        hierarchyContainer.style.display = 'block';
+        createHierarchy(clonedPart, hierarchyContainer);
+        scene2.add(clonedPart);
+        section2Model = clonedPart;
+        objecttoremove = selectedPart;
+        removeObject3D(objecttoremove);
+        updateMainHierarchy();
+        animate();
+    }
+};
+document.addEventListener('selectedObjChange', selectedObjChangeListener);
+}
+
 function createHierarchy(object, parentElement) {
   // Check if the model is loaded before creating the hierarchy
   const hierarchyNode = document.createElement('div');
@@ -227,8 +275,8 @@ function animate() {
   controls.update();
 
   // Render the scene
-  section2Renderer.render(scene2, camera2);
+  section2Renderer.render(scene2, camera2); 
 }
-
+section2RendererContainer.addEventListener('mouseover', handleSection2Drop1);
 section2RendererContainer.addEventListener('drop', handleSection2Drop);
 section2RendererContainer.addEventListener('drop', createskybox);
